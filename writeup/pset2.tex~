@@ -1,0 +1,350 @@
+\documentclass{article}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\pagestyle{fancy}
+\lhead{Trevor Slaton (tms45)\\Joseph Vokt (jpv52)}
+\rhead{Machine Learning (CS 4780)\\Homework \#1}
+\title{HW 1}
+\author{}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\section{Version Spaces}
+
+\begin{enumerate}[(a)]
+\item \emph{Rectangular hypothesis: What is the size of this hypothesis space?}
+
+The size of the hypothesis space is 2026. Let us see why. To choose a hypothesis, we first choose a point $p_{TL}$, and then we pick $p_{BR}$ given $p_{TL}$. To choose $p_{TL}$, we first pick $p_{TL}.x$ in the range $\{0,...,8\}$, then we pick $p_{TL}.y$ in the range $\{8,7,...,0\}$. Next, $p_{BR}$ must be to the bottom right of $p_{TL}$ to exclude duplicate cases, so first pick $p_{BR}.x$ in the range $\{p_{TL}.x,...,8\}$, then pick $p_{BR}.y$ in the range $\{p_{TL}.y,p_{TL}.y-1,...,0\}$. The following python code implements this process:
+
+\begin{verbatim}
+s = 0
+# x-coordinate of PTL
+for i in range(0,9):
+    # y-coordinate of PTL
+    for j in range(8,-1,-1): 
+        # x-coordinate of PBR (right of or in-line with PTL)
+        for k in range(i,9): 
+            # y-coordinate of PBR (below or in-line with PTL)
+            for l in range(j,-1,-1): 
+                s += 1
+# add one for the always negative hypothesis 
+print s+1 
+\end{verbatim}
+
+The output is 2026.
+
+Alternatively, you get the same result when you invert the y coordinates.
+
+\begin{verbatim}
+s = 0
+for i in range(0,9):
+    for j in range(0,9):
+        for k in range(i,9):
+            for l in range(j,9):
+                s = s + 1
+print s+1
+\end{verbatim}
+
+\item \emph{Rectangular hypothesis: Draw the most general hypothesis that satisfies the training data $D_1$. Draw the most specific hypothesis.}
+
+The most general consistent hypothesis is shown below in red. The most specific consistent hypothesis is in green.
+\begin{center}
+\includegraphics[scale=.3]{recthypo.png}
+\end{center}
+
+\item \emph{Rectangular hypothesis: What is the size of the version space for the training data $D_1$?}
+
+There are 6 places to put $p_{TL}$: $(3,7),(3,6),(3,5),(4,7),(4,6),(4,5)$. There are 4 places to put $p_{BR}$: $(7,3),(7,4),(6,3),(6,4)$. Therefore the size of the version space is $6*4=24$.
+
+\item \emph{Rectangular hypothesis: Between the three query candidates, is there a best choice?}
+
+The best query candidate is shown below in red at position $(4,6)$. If the label of the query at $(4,6)$ is verified to be negative, then the version space is reduced to a single hypothesis. This single hypothesis is the most specific hypothesis, which was mentioned above.
+
+\begin{center}
+\includegraphics[scale=.3]{besthypo.png}
+\end{center}
+
+
+\item \emph{Decision tree hypothesis: Give the size of the version space for a 1-level decision tree and the training set $D_2$.}
+
+The size of the version space is 0. If for example you were to say that $(x,y)$ is positive based solely on $x\geq 6$, it would not be consistent with the fact that $(6,7)$ is negative. Additionally you were to say that $(x,y)$ is negative based solely on $y\geq 6$, it would not be consistent with the fact that $(2,3)$ is negative. More generally, because both positive and negative examples fall on the same $x$, namely the negative at $(6,7)$ and the positive at $(6,2)$, it is impossible to distinguish between them using only an $x$ threshold. The same situation holds for $y$, namely the negative at $(4,5)$ and the positive at $(7,5)$. Since both of these situations are present in this data, it is impossible to use solely either an $x$ or $y$ threshold to completely classify the data in a consistent manner.
+
+\item \emph{Decision tree hypothesis: What is the size of the version space now? Draw all hypotheses that belong to the version space in the (x,y) space of Figure 2.}
+
+The size of the version space is now 4. The following examples show the positive region surrounded in green, and the negative region surrounded in red. $x^*$ is the $x$ splitting threshold, and $y^*$ is the $y$ splitting threshold.
+
+\begin{figure}
+        \centering
+        \begin{subfigure}[h]{.24\textwidth}
+                \centering
+                \includegraphics[scale=.24]{x5y6.png}
+                \caption{$x^*=5,y^*=6$}
+                \label{fig:gull}
+        \end{subfigure}%
+         \begin{subfigure}[h]{.24\textwidth}
+                \centering
+                \includegraphics[scale=.24]{x5y7.png}
+                \caption{$x^*=5,y^*=7$}
+                \label{fig:gull}
+        \end{subfigure}%
+        \begin{subfigure}[h]{.24\textwidth}
+                \centering
+                \includegraphics[scale=.24]{x6y6.png}
+                \caption{$x^*=6,y^*=6$}
+                \label{fig:gull}
+        \end{subfigure}%
+        \begin{subfigure}[h]{.24\textwidth}
+                \centering
+                \includegraphics[scale=.25]{x6y7.png}
+                \caption{$x^*=6,y^*=7$}
+                \label{fig:gull}
+        \end{subfigure}%
+\end{figure}
+\begin{figure}
+        \centering
+        \begin{subfigure}[h]{.24\textwidth}
+                \centering
+                \includegraphics[scale=.24]{y6x5.png}
+                \caption{$y^*=6,x^*=5$}
+        \end{subfigure}
+        \begin{subfigure}[h]{.24\textwidth}
+                \centering
+                \includegraphics[scale=.24]{y7x5.png}
+                \caption{$y^*=7,x^*=5$}
+        \end{subfigure}
+        \begin{subfigure}[h]{.24\textwidth}
+                \centering
+                \includegraphics[scale=.24]{y6x6.png}
+                \caption{$y^*=6,x^*=6$}
+        \end{subfigure}
+        \begin{subfigure}[h]{.24\textwidth}
+                \centering
+                \includegraphics[scale=.24]{y7x6.png}
+                \caption{$y^*=7,x^*=6$}
+        \end{subfigure}
+\end{figure}
+
+Notice that in terms of the regions which are either labeled positive or negative, (a) is equivalent to (e), (b) is equivalent to (f), (c) is equivalent to (g), and (d) is equivalent to (h). This means it doesn't matter whether you split on the $x$ or the $y$ first because you end up with the same divisions into positive and negative regions. Thus there are only 4 unique ways to label the regions that are consistent with the data, and therefore the version space is composed of 4 unique consistent hypotheses.
+
+\end{enumerate}
+\newpage
+\section{Regression with kNN}
+
+Here are all five faces with $k=1$. 
+
+\begin{figure}[h!]
+        \centering
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{face1.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{face2.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{face3.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{face4.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{face5.png}
+        \end{subfigure}
+\end{figure}
+
+And when $k=5$:
+
+\begin{figure}[h!]
+        \centering
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{k5img1.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{k5img2.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{k5img3.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{k5img4.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{k5img5.png}
+        \end{subfigure}
+\end{figure}
+
+As $k$ increases, we notice that the images blur. For example, when $k=50$:
+
+\begin{figure}[h!]
+        \centering
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{k50img1.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{k50img2.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{k50img3.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{k50img4.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{k50img5.png}
+        \end{subfigure}
+\end{figure}
+
+
+In the extreme, when $k=300$, we notice that all the predicted faces are the same:
+
+\begin{figure}[h!]
+        \centering
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{k300img1.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{k300img2.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{k300img3.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{k300img4.png}
+        \end{subfigure}
+        \begin{subfigure}[h]{.18\textwidth}
+                \centering
+                \includegraphics{k300img5.png}
+        \end{subfigure}
+\end{figure}
+
+This is likely due to the fact that when $k=300$, all of the training examples count as nearest neighbors; thus the set of $k$ nearest neighbors is the same for every new example. As a result, the kNN regression produces the same weighted average for every new example.
+\newpage
+\section{kNN Classification}
+
+\begin{enumerate}[(a)]
+\item \emph{Content-based recommendation}
+Listed below are the top 10 recommendations for each of the two requested books:\\
+
+\underline{3 title-Fifty Shades of Grey: Book One of the Fifty Shades Trilogy}\\
+4 title-Masked\\
+3 title-Fifty Shades Freed: Book Three of the Fifty Shades Trilogy\\
+3 title-Secrets Vol. 2\\
+1 title-SHADES OF CONDEMNATION (Book One in the SHADES TRILOGY)\\
+3 title-The Edge of Never\\
+2 title-Late\\
+2 title-B00AB1Z4QS\\
+3 title-B008GVDQI8\\
+3 title-Hopeless\\
+3 title-Charlie Card\\
+\\
+\underline{1 title-Brains: A Zombie Memoir}\\
+2 title-Criminal: A Novel (with bonus novella Snatched): A Novel\\
+2 title-B008RLTZBO\\
+2 title-B004CLYJFK\\
+2 title-B000FC11EW\\
+1 title-Dying to Live: Last Rites\\
+3 title-B009AHS8L2\\
+1 title-War Against The Walking Dead: The Ministry of Zombies\\
+2 title-Brownies\\
+2 title-Easter Bunny Murder (A Lucy Stone Mystery)\\
+3 title-Apocalyptic Moon (After the Bane)\\
+
+Qualitatively, these recommendations seem reasonable. In fact, if the seed title itself is not removed from the training set, the algorithm will recommend the seed title as its own nearest neighbor. In the first set, Amazon inspection suggests that 
+"Masked," a paperback about superheroes may be an outlier. However, many of the other titles suggested fall within the genre of romance (class 3) like the seed title. Additionally, the seed title was part of a series, and some of the other members of the series have been suggested.
+
+In the second set, the genres recommended appear disparate, but they are reasonably relevant: zombies, murder, crime, and even a romance (Apocalyptic Moon) that sounds like it includes elements common to the horror genre (class 1), which was the class of the seed title. 
+
+However, we note that in both of these examples at least 3 of the 5 genres are represented in the top ten. Thus, even though this algorithm may find \emph{similar} books based on the word content, it may not be very accurate at \emph{labeling genres}, which is what we will be considering in the remaining parts of this question.
+
+\item \emph{Baseline}
+
+Accuracy: 62.25\%. 
+\\
+Precision: for classes 0,1,2,3,4 we get respectively \[60.55\%, 46.86\%, 57.82\%, 77.5\%, 71.48\%\]  
+\\
+Recall: for classes 0,1,2,3,4 we get respectively\[55.4\%, 55\%, 66.36\%, 73.7\%, 59.9\%\]
+
+\item \emph{kNN Implementation}
+
+The plot below shows accuracy vs. $\log_{10}(k)$ when running the unweighted kNN algorithm to classify the genre of books:
+
+\begin{center}
+\includegraphics[scale=.7]{acc_vs_log10k.PNG}
+\end{center}
+
+\item \emph{What value of k yields the highest accuracy on the test set? Report Precision and Recall for that value of k for every class (10 values in total).}
+
+We achieved the highest accuracy of 59.32\% with $k = 200$. The precision and recall of $k=200$ are shown below for every class:
+
+\begin{center}
+\includegraphics[scale=.5]{pr.png}
+\end{center}
+
+The table below summarizes all of our results, including the precision and recall of the $k$ with the best accuracy (highlighted in blue), for every class:
+
+\hspace{-6em}
+\includegraphics[scale=.5]{data_table.png}
+
+\item \emph{What do you observe with respect to the Precision and Recall when k = 5,000? Does this match your expectations?}
+
+With $k=5000$, we get accuracy: 20.62\%, precision for classes $(0,1,2,3,4)$ as $(20.62,0,0,0,0)$\%, and recall as $(100,0,0,0,0)$\% respectively. These results are expected; see part (f) for an explanation of an analogous scenario.
+
+\item \emph{What Precision and Recall do we expect on a test set of size ntest = 5000 where each of the five classes has an equal number of instances?}
+
+When $k=n_{train}$, the unweighted kNN algorithm predicts the majority class of the training set as the label for every instance in the test set. This means that all instances in the test set that belong to the majority class of the training set will be correctly labeled, but all instances in other classes will be incorrectly labeled.
+
+Given a class label, recall is defined as the number of instances of that class in the test set which were correctly predicted, over the number of instances of that class in the test set. The recall for the majority class 0 will be $100\%$ because every instance of that class in the test set will be predicted correctly. However, the instances of the other classes (1,2,3,4) will receive no prediction that matches them correctly to their class label. Thus the recall will be zero for those classes.
+%        numer_p = num_correct_predictions_per_class[class_label]
+%        denom_p = num_predictions_per_class[class_label]
+%        precision[class_label] = numer_p / denom_p if denom_p != 0.0 else 0.0
+%        numer_r = num_correct_predictions_per_class[class_label]
+%        denom_r = num_correct_labels_per_class[class_label]
+%        recall[class_label] = numer_r / denom_r if denom_r != 0.0 else 0.0
+
+Given a class label, precision is defined as the number of instances of that class in the test set which were correctly predicted, over the number of times that class was predicted at all. Since we know that instances of the non-majority classes (1,2,3,4) in the test set will never be predicted at all, the precision for those classes will have 0 in the denominator and thus also 0 in the numerator, which we defined as a precision of 0. All 5000 instances of the test set will be predicted to be members of the majority class. Since each of the five classes has an equal number of instances in the test set, we are guaranteed that exactly $5000/5=1000$ instances in the test set are true members of class 0, which is the majority class. Therefore, we will have a precision of 1000/5000=20\%. It so happens that the accuracy will also be 20\%, since there will be 1000 correct predictions out of 5000 total.
+
+\item \emph{What does this say about the geometry of our instance space (book data)? Show a qualitative example of an instance space in 2D where we would expect the baseline to perform significantly worse compared to kNN.}
+
+The baseline accuracy is better than the even the best $kNN$ accuracy ($k=200$) by 2.93\%. The baseline precision percentages were slightly higher for classes 0,2,3, but lower for classes 1,4. The range of recall percentages for $kNN$ was from 36.25\% (class 1) to 82.3\% (class 3). The range of recall percentages for the baseline was from 55\% (class 1) to 73.7\% (class 3). Thus the recall among all classes shows less variation for the baseline than it does for $kNN$. 
+
+For the centroid baseline to work as well as it did, this instance space must have centroid vectors for each class that are spaced far enough apart that they have a low cosine similarity score. The centroid feature vectors represent class groupings. Each instance in the test set has enough similarity with one of the centroids that it can be precisely associated with a particular class. As we noted in 3a, $kNN$ appears to be good at finding similar books but not necessarily good at correctly labeling their genres. The baseline specifically groups training examples by their class labels in order to extract a centroid vector that captures some information about what the members of the class have in common; it shifts the task from finding the most similar feature vector to finding the most similar genre centroid. Thus the baseline understandably performs better at the specific task of genre prediction.
+
+Below is an example of an instance space where the baseline would have better performance than $kNN$. The three arrows shown are centroid feature vectors. They are meant to be as orthogonal as they can be in 2D, thus having low cosine similarity scores with respect to each other.
+
+\begin{center}
+\includegraphics[scale=.5]{goodcentroid.png} 
+\end{center}
+
+Below is an example of an instance space where the baseline would have worse performance than $kNN$. These centroids have high cosine similarity scores with respect to each other.
+\begin{center}
+\includegraphics[scale=.7]{badcentroid2.png} 
+\end{center}
+
+When the centroids are so close to each other that the angles between them approach the angles between two typical training examples, then the centroids no longer give enough information to spatially separate particular classes. In this case, by using centroid vectors instead of the entire training set, we are essentially reducing the size of our training set without gaining any extra information, and therefore decreasing the amount of experience available to the learning algorithm, which it needs to improve its performance at the task of predicting genres.
+\end{enumerate}
+
+\end{document}
