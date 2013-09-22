@@ -123,7 +123,10 @@ class TDIDT:
             def splitCriterion(example):
                 return example[attr] >= thresh
             self.splitCriterion = splitCriterion
-            new_count = removeKeyFromDict(count, attr)
+            new_count = count.copy()
+            new_count[attr] = removeKeyFromDict(count[attr], thresh)
+            if len(new_count[attr]) == 0:
+                new_count = removeKeyFromDict(count, attr)
             yeses, nos = splitExamples(examples, self.splitCriterion)
             self.yes = TDIDT()
             self.yes.grow(yeses, new_count, y_def)
