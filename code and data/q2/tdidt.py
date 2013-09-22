@@ -121,18 +121,20 @@ class TDIDT:
                         max_gain = g
                         attr, thresh = feature_id, feature_value          
             def splitCriterion(example):
-                return example[attr] >= thresh
+                return example[attr] >= thresh   
             self.splitCriterion = splitCriterion
             new_count = count.copy()
-            new_count[attr] = removeKeyFromDict(count[attr], thresh)
+            for val in count[attr]:
+                if val >= thresh:
+                    new_count[attr] = removeKeyFromDict(new_count[attr], val)
             if len(new_count[attr]) == 0:
-                new_count = removeKeyFromDict(count, attr)
+                new_count = removeKeyFromDict(new_count, attr)
             yeses, nos = splitExamples(examples, self.splitCriterion)
             self.yes = TDIDT()
             self.yes.grow(yeses, new_count, y_def)
             self.no = TDIDT()
             self.no.grow(nos, new_count, y_def)
-        else: # pick majority class of remaining labels
+        else: # pick majority class of remaining labels (no splits left)
             n, p = len(examples[0]), len(examples[1])
             self.label = 0 if n > p else 1
  
