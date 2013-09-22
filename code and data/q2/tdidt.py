@@ -19,62 +19,37 @@ def parseLine(line):
         example[feature_id] = feature_value
     return label, example
 
-def dataFromFile(data_file):
+def growthDataFromFile(data_file):
+    f = open(data_file, 'r')
+    for line in f:
+        label, example = parseLine(line)
+        count = {}
+        for feature_id in example:
+            if feature_id not in count:
+                count[feature_id] = {}
+            if count[feature_id][feature_value] not in count[feature_id]:
+                count[feature_id][feature_value] = defaultdict(int)
+            feature_value = example[feature_id]
+            count[feature_id][feature_value][label] += 1
+    f.close()
+    return count
+    
+def examplesFromFile(data_file):
     examples = defaultdict([])
     f = open(data_file, 'r')
     for line in f:
         label, example = parseLine(line)
         examples[label].append(example)
     f.close()
-    return examples
+   return examples
 
-# for now, assumes the only labels are 0 for negative and 1 for positive  
-def info(examples):
-    p = len(examples[1])
-    n = len(examples[0])
+def info(n,p):
     frac_p = p/float(p+n)
     frac_n = n/float(p+n)
     return -frac_p*math.log(frac_p,2) - frac_n*math.log(frac_n,2)
-
-# def genSubDataSets(examples, x_thresh, y_thresh):
-    # x_thresh_set = defaultdict([])
-    # y_thresh_set = defaultdict([])
-    # for example in examples[1]:
-        # if example[0] >= x_thresh:
-            # x_thresh_set[1].append(example)
-        # else:
-            # x_thresh_set[0].append(examples)
-        # if example[1] >= y_thresh:
-            # y_thresh_set[1].append(example)
-        # else:
-            # y_thresh_set[0].append(examples)
-    # return x_thresh_set, y_thresh_set
-    
-    
-# def infoGain(subset): 
-
-# # return the min x and min y of positive examples in the dict "examples"
-# # to use as threshold values  
-# # for now, assumes the only labels are 0 for negative and 1 for positive    
-# def xyThresholds(examples):
-    # min_x = min_y = sys.maxint
-    # for pos_example in examples[1]:
-        # if pos_example.x < min_x:
-            # min_x = pos_example.x
-        # if pos_example.y < min_y:
-            # min_y = pos_example.y
-    # return min_x, min_y
-
-# def splitCriterion(feature_id, threshold):
-    # return attribute >= threshold
-    
-# class Point:
-    # def __init__(self, xy):
-        # self.x = xy[0]
-        # self.y = xy[1]
     
 class TDIDT:
-    def __init__(self, data_file, splitCriterion, y_def=0):
+    def __init__(self, data_file, y_def=0):
          # a function that processes an example and returns a bool
         self.splitCriterion = None
         # the yes child of this TDIDT, also a TDIT
@@ -84,8 +59,9 @@ class TDIDT:
         # only leaves will have labels that are not None
         self.label = None
     
-        examples = dataFromFile(data_file)
-        self.grow(examples)
+        examples = examplesFromFile(data_file)
+        count = growthDataFromFile(data_file)
+        self.grow(self, examples, count)
     
     def classify(self, example):
         if self.label is None:
@@ -96,7 +72,7 @@ class TDIDT:
         else:
             return self.label
     
-    def grow(self, examples, y_def=0):
+    def grow(self, examples, count, y_def=0):
         if examples.keys() == []:
             self.label = y_def
         else:
@@ -107,9 +83,31 @@ class TDIDT:
             if identical:
                 self.label = first_label
             else:
-                # TODO
-                
-    
-# args
+                max_info = -sys.maxint-1
+                for feature_id in count:
+                    for feature_value in count[feature_id]:
+                        n = count[feature_id][feature_value][0]
+                        p = count[feature_id][feature_value][1]
+                        i = info(n,p)
+                        if i > max_info:
+                            max_info = i
+                            attr, thresh = feature_id, feature_value
+                def splitCriterion(example):
+                    return example[attr] >= thresh
+                self.splitCriterion = splitCriterion
+                del count[feature_id]
+                self.yes = self.grow(self, examples, count, y_def=0)
+                self.no = self.grow(self, examples, count, y_def=0)
+ 
+def main(data_file):
+    tdidt = TDIDT(data_file)
+    examples = examplesFromFile(data_file)
+    for label in examples:
+        for example in examples[label]:
+            prediction = tdidt.classify(example)
+            print label, prediction, prediciton == label
+ 
+# arg0: script name (tdidt.py)
+# arg1: data_file for training and validation
 if __name__ == "__main__":
-    print "implement main"
+    main(sys.argv[1])
