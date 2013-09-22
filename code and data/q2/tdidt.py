@@ -92,12 +92,10 @@ class TDIDT:
             return self.label
     
     def grow(self, examples, count, y_def=0):
-        print "count size:", len(count)
         labels = examples.keys()
         if labels == []:
             self.label = y_def
         elif len(labels) == 1:
-            print "got here and label was "+str(labels[0])
             self.label = labels[0]
         elif len(count) > 0:
             max_gain = -float('inf')
@@ -132,8 +130,8 @@ class TDIDT:
             self.no = TDIDT()
             self.no.grow(nos, new_count, y_def)
         else: # pick majority class of remaining labels
-            print len(examples[0]), len(examples[1])
-            self.label = 0 if len(examples[0]) > len(examples[1]) else 1
+            n, p = len(examples[0]), len(examples[1])
+            self.label = 0 if n > p else 1
  
 def main(data_file):
     tdidt = TDIDT(data_file)
