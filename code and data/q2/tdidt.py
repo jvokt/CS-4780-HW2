@@ -44,10 +44,15 @@ def examplesFromFile(data_file):
     return examples
 
 def entropy(n,p):
-    frac_p = p/float(p+n)
-    frac_n = n/float(p+n)
-    print n, p
-    return -frac_p*math.log(frac_p,2) - frac_n*math.log(frac_n,2)
+    if p == 0 and n == 0:
+        return 0.0
+    elif p == 0:
+        frac_n = n/float(p+n)
+        return -frac_n*math.log(frac_n,2)
+    else:
+        frac_p = p/float(p+n)
+        frac_n = n/float(p+n)
+        return -frac_p*math.log(frac_p,2) - frac_n*math.log(frac_n,2)
     
 class TDIDT:
     def __init__(self, data_file, y_def=0):
@@ -73,18 +78,19 @@ class TDIDT:
         else:
             return self.label
     
-    def splitExamples(examples, splitCriterion):
+    def splitExamples(self, examples, splitCriterion):
         yeses, nos = defaultdict(list), defaultdict(list)
         for label in examples:
-            example = examples[label]
-            if splitCriterion(example):
-                yeses[label].append(example)
-            else:
-                nos[label].append(example)
+            for example in examples[label]:
+                if splitCriterion(example):
+                    yeses[label].append(example)
+                else:
+                    nos[label].append(example)
         return yeses, nos
     
     def grow(self, examples, count, y_def=0):
         labels = examples.keys()
+#        print examples.keys()
         if labels == []:
             self.label = y_def
         elif len(labels) == 1:
@@ -99,7 +105,7 @@ class TDIDT:
                     entropy_before = entropy(n,p)
                     def splitCriterion(example):
                         return example[feature_id] >= feature_value
-                    yeses, nos = splitExamples(examples, splitCriterion)
+                    yeses, nos = self.splitExamples(examples, splitCriterion)
                     n_yes, p_yes = len(yeses[0]), len(yeses[1])
                     tot_yes = n_yes + p_yes
                     entropy_yeses = entropy(n_yes, p_yes)
@@ -112,17 +118,16 @@ class TDIDT:
                     if g > max_gain:
                         max_gain = g
                         attr, thresh = feature_id, feature_value
-                    elif attr is None: # default = last id, value pair
-                       attr, thresh = feature_id, feature_value 
+            #print max_gain, attr, thresh           
             def splitCriterion(example):
 #                if attr is not None and thresh is not None:
                 return example[attr] >= thresh
             self.splitCriterion = splitCriterion
-#            if attr is not None:
-            del count[attr]
-            yeses, nos = splitExamples(examples, self.splitCriterion)
-            self.yes = self.grow(yeses, count, y_def)
-            self.no = self.grow(nos, count, y_def)
+            if attr is not None:
+                del count[attr]
+                yeses, nos = self.splitExamples(examples, self.splitCriterion)
+                self.yes = self.grow(yeses, count, y_def)
+                self.no = self.grow(nos, count, y_def)
  
 def main(data_file):
     tdidt = TDIDT(data_file)
@@ -130,7 +135,7 @@ def main(data_file):
     for label in examples:
         for example in examples[label]:
             prediction = tdidt.classify(example)
-            print label, prediction, prediciton == label
+            print label, prediction, prediction == label
  
 # arg0: script name (tdidt.py)
 # arg1: data_file for training and validation
