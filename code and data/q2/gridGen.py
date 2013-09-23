@@ -2,7 +2,7 @@ import sys
 import random
 import math
 
-def main(filename="grid", n=100000):
+def main(filename="grid", n=50000):
     n = int(n)
     out = open(filename, 'w')
     for i in range(n):
@@ -17,7 +17,7 @@ def main(filename="grid", n=100000):
 # arg1: filename for grid
 # arg2: number of points in grid
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         main()
     else:
         main(sys.argv[1], sys.argv[2])
