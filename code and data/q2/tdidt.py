@@ -67,7 +67,7 @@ def removeKeyFromDict(d, key):
     return copy
         
 class TDIDT:
-    def __init__(self, data_file=None, y_def=0):
+    def __init__(self, data_file=None, examples={}, count={}, y_def=0):
         # a function that takes in an example and returns a bool
         self.splitCriterion = None
         # the yes child of this TDIDT, also a TDIT
@@ -80,7 +80,7 @@ class TDIDT:
         if data_file is not None:
             examples = examplesFromFile(data_file)
             count = growthDataFromFile(data_file)
-            self.grow(examples, count)
+        self.grow(examples, count, y_def)    
     
     def classify(self, example):
         if self.label is None and self.splitCriterion is not None:
@@ -130,15 +130,13 @@ class TDIDT:
             if len(new_count[attr]) == 0:
                 new_count = removeKeyFromDict(new_count, attr)
             yeses, nos = splitExamples(examples, self.splitCriterion)
-            self.yes = TDIDT()
-            self.yes.grow(yeses, new_count, y_def)
-            self.no = TDIDT()
-            self.no.grow(nos, new_count, y_def)
+            self.yes = TDIDT(None, yeses, new_count, y_def)
+            self.no = TDIDT(None, nos, new_count, y_def)
         else: # pick majority class of remaining labels (no splits left)
             n, p = len(examples[0]), len(examples[1])
             self.label = 0 if n > p else 1
  
-def main(data_file):
+def main(data_file="circle.train"):
     tdidt = TDIDT(data_file)
     examples = examplesFromFile(data_file)
     correct = total = 0.0
@@ -154,4 +152,7 @@ def main(data_file):
 # arg0: script name (tdidt.py)
 # arg1: data_file for training and validation
 if __name__ == "__main__":
-    main(sys.argv[1])
+    if len(sys.argv) < 2:
+        main()
+    else:
+        main(sys.argv[1])
