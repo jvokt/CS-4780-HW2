@@ -1,12 +1,12 @@
 import sys
-import tdidt
+import tdidt as dt
 import numpy as np
 import matplotlib.pyplot as matlab
 
 def main(data_file="circle.train", grid_file="grid"):
-    tdidt = TDIDT(data_file)
-    examples = examplesFromFile(grid_file)
-    x_p = y_p = x_n = y_n = []
+    tdidt = dt.TDIDT(data_file)
+    examples = dt.examplesFromFile(grid_file)
+    x_p, y_p, x_n, y_n = [], [], [], []
     for label in examples:
         for example in examples[label]:
             prediction = tdidt.classify(example)
@@ -22,6 +22,8 @@ def main(data_file="circle.train", grid_file="grid"):
     x_n = np.array(x_n)
     y_n = np.array(y_n)
     
+    print x_p[5], y_p[5]
+    
     matlab.plot(x_n,y_n,'ro')
     matlab.plot(x_p,y_p,'go')
     matlab.show()
@@ -30,4 +32,7 @@ def main(data_file="circle.train", grid_file="grid"):
 # arg1: data_file for training
 # arg2: data_file for plotting
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    if len(sys.argv) < 2:
+        main()
+    else:
+        main(sys.argv[1], sys.argv[2])
