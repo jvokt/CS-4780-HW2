@@ -82,7 +82,6 @@ class TDIDT:
         self.grow(examples, count, y_def)    
     
     def classify(self, example):
-        print "classifying..."
         if self.label is None and self.splitCriterion is not None:
             if self.splitCriterion(example):
                 return self.yes.classify(example)
@@ -92,7 +91,6 @@ class TDIDT:
             return self.label
     
     def grow(self, examples, count, y_def=0):
-        print "growing..."
         labels = examples.keys()
         if labels == []:
             self.label = y_def
@@ -102,7 +100,7 @@ class TDIDT:
             max_gain = -float('inf')
             attr = thresh = None
             for feature_id in count:
-                for feature_value in range(1):
+                for feature_value in range(1): # for extension to > 1
                     entropy_before, _ = entropy(count[feature_id])
                     def splitCriterion(example):
                         if feature_id in example:
@@ -110,7 +108,7 @@ class TDIDT:
                         else:
                             return False
                     yeses, nos = splitExamples(examples, splitCriterion)
-                    # /////
+                    # this could be cleaner vv
                     count_yeses = countDataFromExamples(yeses)
                     if feature_id in count_yeses:                     
                         entropy_yeses, tot_yes = entropy(count_yeses[feature_id])
@@ -121,12 +119,12 @@ class TDIDT:
                         entropy_nos, tot_no = entropy(count_nos[feature_id])
                     else:
                         entropy_nos = tot_no = 0.0
-                    if tot_yes == 0 and tot_no == 0:
+                    if tot_yes + tot_no == 0:
                         entropy_after = 0.0
                     else:
                         entropy_after = tot_yes/float(tot_yes+tot_no)*entropy_yeses
                         entropy_after += tot_no/float(tot_yes+tot_no)*entropy_nos
-                    # ////
+                    # this could be cleaner ^^
                     g = entropy_before - entropy_after
                     if g > max_gain:
                         max_gain = g
@@ -136,13 +134,9 @@ class TDIDT:
                     return example[attr] > thresh
                 else:
                     return False
+            #print attr # could use to get "top" words       
             self.splitCriterion = splitCriterion
-            new_count = count.copy()
-            for val in count[attr]:
-                if val >= thresh:
-                    new_count[attr] = removeKeyFromDict(new_count[attr], val)
-            if len(new_count[attr]) == 0:
-                new_count = removeKeyFromDict(new_count, attr)
+            new_count = removeKeyFromDict(count, attr)
             yeses, nos = splitExamples(examples, self.splitCriterion)
             self.yes = TDIDT(None, yeses, new_count, y_def)
             self.no = TDIDT(None, nos, new_count, y_def)
@@ -155,7 +149,7 @@ class TDIDT:
                     plurality = label
             self.label = plurality
  
-def main(data_file="groups.test"):
+def main(data_file="groups.train"):
     tdidt = TDIDT(data_file)
     examples = examplesFromFile(data_file)
     correct = total = 0.0
