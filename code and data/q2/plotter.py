@@ -23,10 +23,8 @@ def main(data_file="circle.train", grid_file="grid", show=True):
     x_n = np.array(x_n)
     y_n = np.array(y_n)
     
-    print x_p[5], y_p[5]
-    
-    matlab.plot(x_n,y_n,'ro')
-    matlab.plot(x_p,y_p,'go')
+    matlab.plot(x_n,y_n,'go')
+    matlab.plot(x_p,y_p,'ro')
     if show:
         matlab.show()
     else:
