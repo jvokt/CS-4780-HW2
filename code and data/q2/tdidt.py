@@ -78,7 +78,7 @@ class TDIDT:
         if data_file is not None:
             examples = examplesFromFile(data_file)
             count = countDataFromExamples(examples)
-        self.grow(examples, count, y_def)
+        self.grow(examples, count, y_def)    
     
     def classify(self, example):
         if self.label is None and self.splitCriterion is not None:
@@ -122,9 +122,7 @@ class TDIDT:
                 return example[attr] >= thresh   
             self.splitCriterion = splitCriterion
             new_count = count.copy()
-            for val in count[attr]:
-                if val >= thresh:
-                    new_count[attr] = removeKeyFromDict(new_count[attr], val)
+            new_count[attr] = removeKeyFromDict(count[attr], thresh)
             if len(new_count[attr]) == 0:
                 new_count = removeKeyFromDict(new_count, attr)
             yeses, nos = splitExamples(examples, self.splitCriterion)
