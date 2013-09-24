@@ -19,19 +19,17 @@ def parseLine(line):
         example[feature_id] = feature_value
     return label, example
 
-def growthDataFromFile(data_file):
-    f = open(data_file, 'r')
-    count = {}
-    for line in f:
-        label, example = parseLine(line)
-        for feature_id in example:
-            if feature_id not in count:
-                count[feature_id] = {}
-            feature_value = int(round(example[feature_id],0)) # split on ints 
-            if feature_value not in count[feature_id]:
-                count[feature_id][feature_value] = defaultdict(int)
-            count[feature_id][feature_value][label] += 1
-    f.close()
+def countDataFromExamples(examples):
+    count = {}    
+    for label in examples:
+        for example in examples[label]:
+            for feature_id in example:
+                if feature_id not in count:
+                    count[feature_id] = {}
+                feature_value = int(round(example[feature_id],0)) # split on ints 
+                if feature_value not in count[feature_id]:
+                    count[feature_id][feature_value] = defaultdict(int)
+                count[feature_id][feature_value][label] += 1
     return count
     
 def examplesFromFile(data_file):
@@ -79,7 +77,7 @@ class TDIDT:
     
         if data_file is not None:
             examples = examplesFromFile(data_file)
-            count = growthDataFromFile(data_file)
+            count = countDataFromExamples(examples)
         self.grow(examples, count, y_def)    
     
     def classify(self, example):
