@@ -66,7 +66,7 @@ def removeKeyFromDict(d, key):
     return copy
         
 class TDIDT:
-    def __init__(self, data_file=None, examples={}, count={}, y_def=0):
+    def __init__(self, data_file=None, examples={}, count={}, level=1, y_def=0):
         # a function that takes in an example and returns a bool
         self.splitCriterion = None
         # the yes child of this TDIDT, also a TDIT
@@ -78,8 +78,8 @@ class TDIDT:
     
         if data_file is not None:
             examples = examplesFromFile(data_file)
-            count = countDataFromExamples(examples)
-        self.grow(examples, count, y_def)    
+            count = countDataFromExamples(examples)        
+        self.grow(examples, count, level, y_def)    
     
     def classify(self, example):
         if self.label is None and self.splitCriterion is not None:
@@ -90,7 +90,7 @@ class TDIDT:
         else:
             return self.label
     
-    def grow(self, examples, count, y_def=0):
+    def grow(self, examples, count, level, y_def=0):
         labels = examples.keys()
         if labels == []:
             self.label = y_def
@@ -134,12 +134,12 @@ class TDIDT:
                     return example[attr] > thresh
                 else:
                     return False
-            #print attr # could use to get "top" words       
+            print "level: ", level, "attr: ", attr # could use to get "top" words       
             self.splitCriterion = splitCriterion
             new_count = removeKeyFromDict(count, attr)
             yeses, nos = splitExamples(examples, self.splitCriterion)
-            self.yes = TDIDT(None, yeses, new_count, y_def)
-            self.no = TDIDT(None, nos, new_count, y_def)
+            self.yes = TDIDT(None, yeses, new_count, level+1, y_def)
+            self.no = TDIDT(None, nos, new_count, level+1, y_def)
         else: # pick "majority" class of remaining labels (no splits left)
             maximum = -sys.maxint-1
             for label in examples:
