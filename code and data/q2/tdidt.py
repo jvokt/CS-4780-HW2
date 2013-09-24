@@ -78,7 +78,7 @@ class TDIDT:
         if data_file is not None:
             examples = examplesFromFile(data_file)
             count = countDataFromExamples(examples)
-        self.grow(examples, count, y_def)    
+        self.grow(examples, count, y_def)
     
     def classify(self, example):
         if self.label is None and self.splitCriterion is not None:
