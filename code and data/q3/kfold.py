@@ -37,7 +37,7 @@ def testFile(k):
     
 def main(k=5):
     k = int(k)
-    accuracies = open("accuracies.txt", 'w')
+    accuracies = open("accuracies_nl.txt", 'w')
     for d in [2,3,5,10,50,80]:
         avg = 0.0
         for i in range(k):    

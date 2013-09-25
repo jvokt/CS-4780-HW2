@@ -38,19 +38,19 @@ def testFile(k):
     
 def main(k=5):
     k = int(k)
-    accuracies = open("accuracies_e.txt", 'w')
-    for i in range(k):    
-        tdidt = dt.TDIDT(trainFile(i), None, None, None, 1, 10)
-        examples = examplesFromFile(testFile(i))
-        correct = total = 0.0
-        for label in examples:
-            for example in examples[label]:
-                prediction = tdidt.classify(example)
-                if prediction == label:
-                    correct += 1.0
-                total += 1.0    
-        acc = correct/total
-        accuracies.write("k = "+str(i)+": "+str(acc)+"\n")
+    accuracies = open("accuracies_e.txt", 'a')
+    # for i in range(k):    
+        # tdidt = dt.TDIDT(trainFile(i), None, None, None, 1, 10)
+        # examples = examplesFromFile(testFile(i))
+        # correct = total = 0.0
+        # for label in examples:
+            # for example in examples[label]:
+                # prediction = tdidt.classify(example)
+                # if prediction == label:
+                    # correct += 1.0
+                # total += 1.0    
+        # acc = correct/total
+        # accuracies.write("k = "+str(i)+": "+str(acc)+"\n")
     for i in range(k):    
         tdidt = dte.TDIDT(trainFile(i), None, None, None, 1, 10)
         examples = examplesFromFile(testFile(i))
