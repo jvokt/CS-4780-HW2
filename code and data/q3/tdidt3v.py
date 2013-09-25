@@ -14,10 +14,10 @@ def entropy(labels):
         if counts[label] > 0:
             frac = counts[label]/total
             entropy -= frac*math.log(frac,2)
-    return entropy
+    return entropy, total
 
 class TDIDT:
-    def __init__(self, data_file=None, examples=[], labels=[], level=1, y_def=0):
+    def __init__(self, data_file=None, examples=None, labels=None, used=None, level=1, y_def=0):
         # a function that takes in an example and returns self.attr > self.thresh
         self.splitCriterion = None
         self.attr = None
@@ -31,7 +31,9 @@ class TDIDT:
     
         if data_file is not None:
             examples, labels = load_svmlight_file(data_file)
-        self.grow(examples, labels, level, y_def)    
+            used = set()
+        if examples is not None and labels is not None and used is not None:    
+            self.grow(examples, labels, used, level, y_def)    
     
     def classify(self, example):
         if self.label is None:
@@ -42,7 +44,7 @@ class TDIDT:
         else:
             return self.label
     
-    def grow(self, examples, labels, level, y_def=0):
+    def grow(self, examples, labels, used, level, y_def=0):
         
         def default():
             maximum = -sys.maxint-1
@@ -55,6 +57,7 @@ class TDIDT:
             self.label = plurality
             
         num_examples, num_features = examples.get_shape()
+        
         if len(labels) == 0:
             self.label = y_def
         elif len(labels) == 1:
@@ -63,46 +66,72 @@ class TDIDT:
             max_gain = -float('inf')
             attr = _yeses = _nos = None
 
-            for idx in range(num_features):
+            for idx in range(num_features) and not in used:
+                
+                used.add(idx)
                 
                 these_features = examples.getcol(idx)
                 
                 yeses, _ = these_features.nonzero()
                 labels_y = labels[yeses]
-                entropy_y = entropy(labels_y)
-                tot_y = len(labels_y)
+                entropy_y, tot_y = entropy(labels_y)
+                #tot_y = len(labels_y)
                 
                 nos = [no for no in range(num_examples) if no not in yeses]                
                 labels_n = labels[nos]
-                entropy_n = entropy(labels_n)
-                tot_n = len(labels_n)
+                entropy_n, tot_n = entropy(labels_n)
+                #tot_n = len(labels_n)
                 
-                entropy_before = entropy(labels)
+                entropy_before, _ = entropy(labels)
                 entropy_after = tot_y/float(tot_y+tot_n)*entropy_y
                 entropy_after += tot_n/float(tot_y+tot_n)*entropy_n
                 
+                #print tot_n, tot_y
+                
                 g = entropy_before - entropy_after
-
+                
                 if g > max_gain:
                     max_gain = g
-                    attr = idx
+                    attr = idx     # doesn't match original index!
                     _yeses = yeses
-                    _nos = nos
+                    _nos = nos       
             
-            print "level: ", level, "attr: ", attr
+            print max_gain
+            
+            #print "level: ", level, "attr: ", attr
             self.attr = attr
+            
             def splitCriterion(example):
                 return example[self.attr] > self.thresh
-            if self.attr is not None:
-                self.splitCriterion = splitCriterion
             
-                examples_y = sparse.hstack([examples[_yeses,:attr],examples[_yeses,attr+1:]],'csr')
-                labels_y = labels[_yeses]
-                examples_n = sparse.hstack([examples[_nos,:attr],examples[_nos,attr+1:]],'csr')
-                labels_no = labels[_nos]
-                
-                self.yes = TDIDT(None, examples_y, labels_y, level+1, y_def)
-                self.no = TDIDT(None, examples_n, labels_n, level+1, y_def)       
+            if self.attr is not None and max_gain > 0:
+                self.splitCriterion = splitCriterion   
+                    
+                if len(_yeses) == 0: # handle yes leaves      
+                    self.yes = TDIDT()
+                    self.yes.label = default()
+                else:
+                    if attr == 0:
+                        examples_y = examples[_yeses,1:]
+                    elif attr == num_features:
+                        examples_y = examples[_yeses,:-1]
+                    else:
+                        examples_y = sparse.hstack([examples[_yeses,:attr-1],examples[_yeses,attr:]],'csr')
+                    labels_y = labels[_yeses]
+                    self.yes = TDIDT(None, examples_y, labels_y, level+1, y_def)
+                    
+                if len(_nos) == 0: # handle no leaves      
+                    self.nos = TDIDT()
+                    self.nos.label = default()
+                else:
+                    if attr == 0:
+                        examples_n = examples[_nos,1:]
+                    elif attr == num_features:
+                        examples_n = examples[_nos,:-1]
+                    else:
+                        examples_n = sparse.hstack([examples[_nos,:attr-1],examples[_nos,attr:]],'csr')                
+                    labels_n = labels[_nos]
+                    self.no = TDIDT(None, examples_n, labels_n, level+1, y_def)
             else:
                 default()
 
