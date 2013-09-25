@@ -65,7 +65,7 @@ class TDIDT:
             self.label = labels[0]
         elif len(used) < num_features and (max_depth is None or level <= max_depth):
             max_gain = -float('inf')
-            attr = thresh = _yeses = _nos = None
+            attr = _thresh = _yeses = _nos = None
             for idx in range(num_features):
                 if idx in used:
                     continue
@@ -92,12 +92,13 @@ class TDIDT:
                         max_gain = g
                         attr = idx
                         used.add(attr)
+                        _thresh = thresh 
                         _yeses = yeses
                         _nos = nos                           
                             
             if max_gain > 0:
                 def splitCriterion(example):
-                    return example[attr] > thresh if attr in example else False
+                    return example[attr] > _thresh if attr in example else False
                 self.splitCriterion = splitCriterion   
                 if len(_yeses) == 0: # handle yes leaves      
                     self.yes = TDIDT()
