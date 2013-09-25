@@ -23,7 +23,7 @@ def entropy(labels):
     return entropy, total 
     
 class TDIDT:
-    def __init__(self, data_file=None, examples=None, labels=None, used=None, level=1, y_def=0):
+    def __init__(self, data_file=None, examples=None, labels=None, used=None, level=1, max_depth=None, y_def=0):
         # a function that takes in an example and returns self.attr > self.thresh
         self.splitCriterion = None
         # the yes child of this TDIDT, also a TDIT
@@ -37,7 +37,7 @@ class TDIDT:
             examples, labels = load_svmlight_file(data_file)
             used = set()
         if examples is not None and labels is not None and used is not None:    
-            self.grow(examples, labels, used, level, y_def)    
+            self.grow(examples, labels, used, level, max_depth, y_def)    
     
     def classify(self, example):
         if self.label is None:
@@ -48,7 +48,7 @@ class TDIDT:
         else:
             return self.label
     
-    def grow(self, examples, labels, used, level, y_def=0):
+    def grow(self, examples, labels, used, level, max_depth, y_def=0):
         def default(): # pick "majority" class of remaining labels (no splits left)
             maximum = -sys.maxint-1
             counts = Counter(labels)
@@ -63,7 +63,7 @@ class TDIDT:
             self.label = y_def
         elif len(labels) == 1:
             self.label = labels[0]
-        elif len(used) < num_features:
+        elif len(used) < num_features and (max_depth is None or level <= max_depth):
             max_gain = -float('inf')
             attr = thresh = _yeses = _nos = None
             for idx in range(num_features):
@@ -96,14 +96,14 @@ class TDIDT:
                 else:
                     examples_y = examples[_yeses]
                     labels_y = labels[_yeses]
-                    self.yes = TDIDT(None, examples_y, labels_y, used.copy(), level+1, y_def)
+                    self.yes = TDIDT(None, examples_y, labels_y, used.copy(), level+1, max_depth, y_def)
                 if len(_nos) == 0: # handle no leaves      
                     self.nos = TDIDT()
                     self.nos.label = default()
                 else:
                     examples_n = examples[_nos]              
                     labels_n = labels[_nos]
-                    self.no = TDIDT(None, examples_n, labels_n, used.copy(), level+1, y_def)
+                    self.no = TDIDT(None, examples_n, labels_n, used.copy(), level+1, max_depth, y_def)
                 
                 # # used to find the word ids 
                 # if level == 1:
@@ -147,21 +147,38 @@ def examplesFromFile(data_file):
     f.close()
     return examples 
  
-def main(data_file="groups.train",test_file=None):
+def main(data_file="groups.train",test_file="groups.test"):
 
     tdidt = TDIDT(data_file)
-    if test_file is not None:
-        examples = examplesFromFile(test_file)
-    else:
-        examples = examplesFromFile(data_file)
-    correct = total = 0.0
-    for label in examples:
-        for example in examples[label]:
-            prediction = tdidt.classify(example)
-            if prediction == label:
-                correct += 1.0
+    tdidt_10 = TDIDT(data_file, None, None, None, 1, 10)
+    examples_train = examplesFromFile(data_file)
+    examples_test = examplesFromFile(test_file)
+    correct_train = correct_test = correct_train_10 = correct_test_10 =total = n01 = n10 = 0.0
+    for label_train, label_test in zip(examples_train, examples_test):
+        for example_train, example_test in zip(examples_train[label_train],examples_test[label_test]):
+            prediction_train = tdidt.classify(example_train)
+            prediction_test = tdidt.classify(example_test)
+            prediction_train_10 = tdidt_10.classify(example_train)
+            prediction_test_10 = tdidt_10.classify(example_test)
+            if prediction_train == label_train:
+                correct_train += 1.0
+            if prediction_train_10 == label_train:
+                correct_train_10 += 1.0   
+            if prediction_test == label_test:
+                correct_test += 1.0
+                if prediction_test_10 != label_test:
+                    n10 += 1.0
+            if prediction_test_10 == label_test:
+                correct_test_10 += 1.0
+                if prediction_test != label_test:        
+                    n01 += 1.0     
             total += 1.0    
-    print "Accuracy: ", correct/total
+    print "Train Accuracy: ", correct_train/total
+    print "Train Accuracy_10: ", correct_train_10/total   
+    print "Test Accuracy: ", correct_test/total
+    print "Test Accuracy_10: ", correct_test_10/total
+    print "n01: ", n01
+    print "n10: ", n10
     
     # print level1
     # print level2
@@ -171,6 +188,7 @@ def main(data_file="groups.train",test_file=None):
  
 # arg0: script name (tdidt3v.py)
 # arg1: data_file for training and validation
+# arg2: test_file
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         main()
