@@ -69,23 +69,32 @@ class TDIDT:
             for idx in range(num_features):
                 if idx in used:
                     continue
-                these_features = examples.getcol(idx)
-                yeses, _ = these_features.nonzero()
-                labels_y = labels[yeses]
-                entropy_y, tot_y = entropy(labels_y)
-                nos = [no for no in range(num_examples) if no not in yeses]
-                labels_n = labels[nos]
-                entropy_n, tot_n = entropy(labels_n)
-                entropy_before, _ = entropy(labels)
-                entropy_after = tot_y/(tot_y+tot_n)*entropy_y
-                entropy_after += tot_n/(tot_y+tot_n)*entropy_n
-                g = entropy_before - entropy_after                         
-                if g > max_gain:
-                    max_gain = g
-                    attr = idx
-                    used.add(attr)
-                    _yeses = yeses
-                    _nos = nos       
+                for thresh in range(2):
+                    if thresh > 0:
+                        indptr = examples.indptr
+                        indices = examples.indices
+                        data = examples.data
+                        data = np.array(data > thresh, dtype=int)
+                        examples = sparse.csr_matrix((data, indices, indptr))
+                    
+                    these_features = examples.getcol(idx)
+                    yeses, _ = these_features.nonzero()
+                    labels_y = labels[yeses]
+                    entropy_y, tot_y = entropy(labels_y)
+                    nos = [no for no in range(num_examples) if no not in yeses]
+                    labels_n = labels[nos]
+                    entropy_n, tot_n = entropy(labels_n)
+                    entropy_before, _ = entropy(labels)
+                    entropy_after = tot_y/(tot_y+tot_n)*entropy_y
+                    entropy_after += tot_n/(tot_y+tot_n)*entropy_n
+                    g = entropy_before - entropy_after                         
+                    if g > max_gain:
+                        max_gain = g
+                        attr = idx
+                        used.add(attr)
+                        _yeses = yeses
+                        _nos = nos                           
+                            
             if max_gain > 0:
                 def splitCriterion(example):
                     return example[attr] > thresh if attr in example else False
