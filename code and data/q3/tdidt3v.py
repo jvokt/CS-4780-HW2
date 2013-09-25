@@ -6,11 +6,11 @@ from sklearn.datasets import load_svmlight_file
 from collections import Counter
 from collections import defaultdict
 
-level1 = [] # used to find the word ids 
-level2 = []
-bottom1 = []
-bottom2 = [] 
-depths = set() # used to determine the bottom two depths  
+# level1 = [] # used to find the word ids 
+# level2 = []
+# bottom1 = []
+# bottom2 = [] 
+# depths = set() # used to determine the bottom two depths  
 
 def entropy(labels):
     counts = Counter(labels)
@@ -79,17 +79,7 @@ class TDIDT:
                 entropy_before, _ = entropy(labels)
                 entropy_after = tot_y/(tot_y+tot_n)*entropy_y
                 entropy_after += tot_n/(tot_y+tot_n)*entropy_n
-                g = entropy_before - entropy_after
-                
-                # print "entropy_y: ", entropy_y
-                # print "entropy_n: ", entropy_n
-                # print "tot_n: ", tot_n
-                # print "tot_y: ", tot_y
-                # print "entropy_b:", entropy_before
-                # print "entropy_a:", entropy_after
-                # print "g: ", g
-                # raw_input("Press enter to continue")
-                                
+                g = entropy_before - entropy_after                         
                 if g > max_gain:
                     max_gain = g
                     attr = idx
@@ -100,29 +90,31 @@ class TDIDT:
                 def splitCriterion(example):
                     return example[attr] > thresh if attr in example else False
                 self.splitCriterion = splitCriterion   
-                # if len(_yeses) == 0: # handle yes leaves      
-                    # self.yes = TDIDT()
-                    # self.yes.label = default()
-                # else:
-                if len(_yeses) > 0:
+                if len(_yeses) == 0: # handle yes leaves      
+                    self.yes = TDIDT()
+                    self.yes.label = default()
+                else:
                     examples_y = examples[_yeses]
                     labels_y = labels[_yeses]
                     self.yes = TDIDT(None, examples_y, labels_y, used.copy(), level+1, y_def)
-                # if len(_nos) == 0: # handle no leaves      
-                    # self.nos = TDIDT()
-                    # self.nos.label = default()
-                # else:
-                if len(_nos) > 0:
+                if len(_nos) == 0: # handle no leaves      
+                    self.nos = TDIDT()
+                    self.nos.label = default()
+                else:
                     examples_n = examples[_nos]              
                     labels_n = labels[_nos]
                     self.no = TDIDT(None, examples_n, labels_n, used.copy(), level+1, y_def)
                 
-                # used to find the word ids 
-                if level == 1:
-                    level1.append(attr)
-                if level == 2:
-                    level2.append(attr)    
-                depths.add(level)   
+                # # used to find the word ids 
+                # if level == 1:
+                    # level1.append(attr)
+                # if level == 2:
+                    # level2.append(attr)    
+                # if level == 55:
+                    # bottom1.append(attr)
+                # if level == 56:
+                    # bottom2.append(attr)
+                # depths.add(level)   
             
             else:
                 default()
@@ -169,12 +161,13 @@ def main(data_file="groups.train",test_file=None):
             if prediction == label:
                 correct += 1.0
             total += 1.0    
-            print label, prediction, prediction == label
     print "Accuracy: ", correct/total
     
-    print level1
-    print level2
-    print max(depths)
+    # print level1
+    # print level2
+    # print bottom1
+    # print bottom2
+    # print max(depths) # 56
  
 # arg0: script name (tdidt3v.py)
 # arg1: data_file for training and validation
