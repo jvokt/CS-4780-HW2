@@ -75,7 +75,7 @@ class TDIDT:
                         indices = examples.indices
                         data = examples.data
                         data = np.array(data > thresh, dtype=int)
-                        examples = sparse.csr_matrix((data, indices, indptr))
+                        examples = sparse.csr_matrix((data, indices, indptr),shape=(num_examples,num_features))
                     
                     these_features = examples.getcol(idx)
                     yeses, _ = these_features.nonzero()
