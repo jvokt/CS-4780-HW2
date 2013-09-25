@@ -32,13 +32,21 @@ Although the results for the two McNemar tests were different, the conclusion is
 \section{Model Averaging with Decision Trees}
 
 \begin{enumerate}[(a)]
-\item Individal decision trees:
+\item Individal decision tree:
 
 \includegraphics[scale=.5]{2a.png}
 
-\item Averaging decision trees:
+\item Two trees that are particularly illustrative examples of overfitting.
+
+\includegraphics[scale=.5]{2b-herp1.png}
+
+\includegraphics[scale=.5]{2b-herp2.png}
+
+Averaging decision trees:
 
 \includegraphics[scale=.5]{2b.png}
+
+Both the combined and the individual are close to the true boundary (within reason, as we can only split on integers). However, many of the 101 the individual trees appear to have suffered from training on less data, meaning that they have overfit a subset of the full training data that is not representative of the true boundary. By training many trees, we average out the error and the outliers cancel out. If we had a better granularity for potential splitting thresholds, our decision trees would have been much better at approximating the true boundary.
 
 \item Show that a prediction can be expressed as follows:
 \[\hat{y} = sign\left(\sum_i^n y_i K ( x_{test} , x_i )\right)\]
@@ -66,12 +74,18 @@ Intuitively, to label test instance $x_{test}$ we are measuring which is greater
 \section{Text Categorization with Decision Trees}
 
 \begin{enumerate}[(a)]
-\item 
-\item 
-\item 
-\item
-\item 
-\item 
+\item \emph{Decision Tree I.} Test error on the test set groups.test: ?/%
+\item \emph{Informative words.} Words from groups.vocab corresponding to the splits at the top 2 levels of the tree: ?. Words corresponding to the splits at the bottom 2 levels of the tree: ?. The major difference between the words at the top and the words at the bottom of the tree is that ?. We hypothesize that the generalization ability of the complete tree we just trained ?.
+\item \emph{Early stopping.} Training accuracy of this classifier on the test set group.test: ?\%. Test accuracy of this classifier on the test set group.test: ?\%. 
+\item \emph{Comparing classifiers.} Let \[x=\frac{(|n_{01}-n_{10}|-1)^2}{n_{01}+n_{10}}\]
+ where $n_{01}$ corresponds to the number of cases which were missclassified by the full decision tree and not the early stopping tree, and $n_{10}$ corresponds to the number of cases which were missclassified by the early stopping tree but not the full decision tree. For groups.test, $n_{01}=?$ and $n_{10}=?$, so $x=?$. Using matlab chi2cdf(x,1), we get a p-value of ?.
+\item \emph{Comparing learning algorithms: Concatenate training and test sets supplied, and perform 5-fold cross-validation over the combined sets. Use the paired t-test to establish whether the two algorithms have different classification accuracies at the 95\% confidence level} Using matlab ttest(x,y), where x is the vector of 5 classification accuracies from the 5-fold cross-validation over the combined sets for the training algorithm in part (c), and y is the same for the modified algorithm that includes the additional splitting threshold, we get a p-value of ?. Thus we can ? establish whether the two algorithms have different classification accuracies at the 95\% confidence level.
+\item \emph{Model selection: Perform 5-fold cross-validation over the combined set from part e once for each value of maximum depth.}
+Plot of the average accuracy for each run on a linear scale:
+
+%\includegraphics{?.png}
+
+The tree depth that results in the highest average accuracy is ?.
 \end{enumerate}
 
 \end{document}
