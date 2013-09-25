@@ -62,13 +62,14 @@ class TDIDT:
             self.label = y_def
         elif len(labels) == 1:
             self.label = labels[0]
-        elif num_features > 0:
+        elif len(used) < num_features:
             max_gain = -float('inf')
             attr = _yeses = _nos = None
 
-            for idx in range(num_features) and not in used:
+            for idx in range(num_features):
                 
-                used.add(idx)
+                if idx in used:
+                    continue
                 
                 these_features = examples.getcol(idx)
                 
@@ -85,24 +86,21 @@ class TDIDT:
                 entropy_before, _ = entropy(labels)
                 entropy_after = tot_y/float(tot_y+tot_n)*entropy_y
                 entropy_after += tot_n/float(tot_y+tot_n)*entropy_n
-                
-                #print tot_n, tot_y
-                
+                                
                 g = entropy_before - entropy_after
                 
                 if g > max_gain:
                     max_gain = g
-                    attr = idx     # doesn't match original index!
+                    attr = idx
+                    used.add(attr)
                     _yeses = yeses
                     _nos = nos       
-            
-            print max_gain
             
             #print "level: ", level, "attr: ", attr
             self.attr = attr
             
             def splitCriterion(example):
-                return example[self.attr] > self.thresh
+                return example[self.attr] > self.thresh if self.attr in example else False
             
             if self.attr is not None and max_gain > 0:
                 self.splitCriterion = splitCriterion   
@@ -111,32 +109,48 @@ class TDIDT:
                     self.yes = TDIDT()
                     self.yes.label = default()
                 else:
-                    if attr == 0:
-                        examples_y = examples[_yeses,1:]
-                    elif attr == num_features:
-                        examples_y = examples[_yeses,:-1]
-                    else:
-                        examples_y = sparse.hstack([examples[_yeses,:attr-1],examples[_yeses,attr:]],'csr')
+                    examples_y = examples[_yeses]
                     labels_y = labels[_yeses]
-                    self.yes = TDIDT(None, examples_y, labels_y, level+1, y_def)
+                    self.yes = TDIDT(None, examples_y, labels_y, used, level+1, y_def)
                     
                 if len(_nos) == 0: # handle no leaves      
                     self.nos = TDIDT()
                     self.nos.label = default()
                 else:
-                    if attr == 0:
-                        examples_n = examples[_nos,1:]
-                    elif attr == num_features:
-                        examples_n = examples[_nos,:-1]
-                    else:
-                        examples_n = sparse.hstack([examples[_nos,:attr-1],examples[_nos,attr:]],'csr')                
+                    examples_n = examples[_nos]              
                     labels_n = labels[_nos]
-                    self.no = TDIDT(None, examples_n, labels_n, level+1, y_def)
+                    self.no = TDIDT(None, examples_n, labels_n, used, level+1, y_def)
             else:
                 default()
 
         else: # pick "majority" class of remaining labels (no splits left)
             default()
+
+# parse a line in svm_light format (from circle.train)
+def parseLine(line):
+    def extractInfo(feature_string):
+        colon_location = feature_string.find(":")
+        if colon_location >= 0: # find returns -1 upon failure
+            feature_id = int(feature_string[:colon_location])
+            feature_value = float(feature_string[colon_location+1:])           
+            return feature_id, feature_value
+    split_line = line.split()
+    if len(split_line) >= 2:
+        label, feature_strings = int(split_line[0]), split_line[1:]
+    example = {}
+    for feature_string in feature_strings:
+        feature_id, feature_value = extractInfo(feature_string)
+        example[feature_id] = feature_value
+    return label, example            
+            
+def examplesFromFile(data_file):
+    examples = defaultdict(list)
+    f = open(data_file, 'r')
+    for line in f:
+        label, example = parseLine(line)
+        examples[label].append(example)
+    f.close()
+    return examples 
  
 def main(data_file="groups.train"):
     tdidt = TDIDT(data_file)
